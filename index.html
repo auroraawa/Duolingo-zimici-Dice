@@ -19,19 +19,19 @@
       relax: [
         { text: "听轻音乐静坐10分钟", cost: 3 },
         { text: "闭眼发呆15分钟", cost: 5 },
-        { text: "吃点小零食", cost: 5 },
-        { text: "看视频或动漫15分钟", cost: 8 },
+        { text: "吃点小零食", cost: 7 },
+        { text: "看视频或动漫15分钟", cost: 10 },
         { text: "自由活动30分钟", cost: 15 },
       ],
       reward: [
-        { text: "玩一局手机/电脑游戏", cost: 12 },
-        { text: "刷短视频10分钟", cost: 6 },
-        { text: "买个小商品（如文具）", cost: 20 },
-        { text: "看B站游戏实况20分钟", cost: 10 },
-        { text: "赖床看视频15分钟", cost: 8 },
+        { text: "玩一局手机/电脑游戏", cost: 15 },
+        { text: "刷短视频10分钟", cost: 7 },
+        { text: "买个小商品（如文具）", cost: 30 },
+        { text: "看B站游戏实况20分钟", cost: 15 },
+        { text: "赖床看视频15分钟", cost: 10 },
       ],
       motivate: [
-        { text: "听激励BGM", cost: 3 }
+        { text: "听激励BGM", cost: 5 }
       ]
     };
 
@@ -39,40 +39,66 @@
       const [points, setPoints] = useState(0);
       const [lastRoll, setLastRoll] = useState(null);
       const [selectedPool, setSelectedPool] = useState(null);
-      const [duoCounter, setDuoCounter] = useState(0);
-      const [zhimiCounter, setZhimiCounter] = useState(0);
 
+      const [duoEngCounter, setDuoEngCounter] = useState(0);    // 多邻国英语单元计数（每1单元掷骰）
+      const [duoMusicCounter, setDuoMusicCounter] = useState(0); // 多邻国音乐单元计数（每3单元掷骰）
+      const [zhimiCounter, setZhimiCounter] = useState(0);      // 知米背单词完成一轮计数（每1轮掷骰）
+
+      // 掷骰，1~6点
       const rollDice = () => {
         const dice = Math.ceil(Math.random() * 6);
         setPoints(prev => prev + dice);
         setLastRoll(dice);
       };
 
+      // 保底点数，答错太多时用
       const addFixedPoint = (num) => {
         setPoints(prev => prev + num);
         setLastRoll("保底+" + num);
       };
 
+      // 知米背单词完成一轮（5新词+复习）掷骰一次
       const completeZhimiSession = () => {
-        const next = zhimiCounter + 1;
-        if (next >= 1) {
-          rollDice();
-          setZhimiCounter(0);
-        } else {
-          setZhimiCounter(next);
-        }
+        setZhimiCounter(prev => {
+          const next = prev + 1;
+          if (next >= 1) {
+            rollDice();
+            return 0;
+          }
+          return next;
+        });
       };
 
-      const completeDuoSession = () => {
-        const next = duoCounter + 1;
-        if (next >= 2) {
-          rollDice();
-          setDuoCounter(0);
-        } else {
-          setDuoCounter(next);
-        }
+      // 多邻国英语单元完成1个掷骰一次
+      const completeDuoEnglishUnit = () => {
+        setDuoEngCounter(prev => {
+          const next = prev + 1;
+          if (next >= 1) {
+            rollDice();
+            return 0;
+          }
+          return next;
+        });
       };
 
+      // 多邻国音乐单元完成1个，3个掷骰一次
+      const completeDuoMusicUnit = () => {
+        setDuoMusicCounter(prev => {
+          const next = prev + 1;
+          if (next >= 3) {
+            rollDice();
+            return 0;
+          }
+          return next;
+        });
+      };
+
+      // 多邻国答错太多时保底给1点
+      const duoMistakeGuarantee = () => {
+        addFixedPoint(1);
+      };
+
+      // 兑换奖励
       const chooseReward = (reward) => {
         if (points >= reward.cost) {
           setPoints(prev => prev - reward.cost);
@@ -91,12 +117,15 @@
             {lastRoll !== null && <p>最近一次点数获取：{lastRoll}</p>}
             <div className="flex flex-col gap-2">
               <button className="bg-green-600 text-white px-4 py-2 rounded" onClick={completeZhimiSession}>
-                完成知米背单词（5新词+复习）
+                完成知米背单词一轮（5新词+复习）
               </button>
-              <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={completeDuoSession}>
-                完成多邻国2课
+              <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={completeDuoEnglishUnit}>
+                多邻国完成1个英语单元
               </button>
-              <button className="bg-yellow-500 text-white px-4 py-2 rounded" onClick={() => addFixedPoint(1)}>
+              <button className="bg-purple-600 text-white px-4 py-2 rounded" onClick={completeDuoMusicUnit}>
+                多邻国完成1个音乐单元（3个单位掷骰一次）
+              </button>
+              <button className="bg-yellow-500 text-white px-4 py-2 rounded" onClick={duoMistakeGuarantee}>
                 多邻国答错太多，保底给1点
               </button>
             </div>
