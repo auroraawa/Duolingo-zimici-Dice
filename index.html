@@ -46,7 +46,7 @@
 
       // 掷骰，1~6点
       const rollDice = () => {
-        const dice = Math.ceil(Math.random() * 6);
+      const dice = Math.floor(Math.random() * 5) + 3; // 生成3~7之间的整数
         setPoints(prev => prev + dice);
         setLastRoll(dice);
       };
