@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>学习奖励掷骰系统</title>
+  <script src="https://cdn.jsdelivr.net/npm/react@18/umd/react.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@babel/standalone/babel.min.js"></script>
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+</head>
+<body class="bg-gray-100">
+  <div id="root"></div>
+
+  <script type="text/babel">
+    const { useState } = React;
+
+    const rewardPools = {
+      relax: [
+        { text: "听轻音乐静坐10分钟", cost: 5 },
+        { text: "闭眼发呆15分钟", cost: 10 },
+        { text: "吃点小零食", cost: 10 },
+        { text: "看视频或动漫15分钟", cost: 15 },
+        { text: "自由活动30分钟", cost: 30 },
+      ],
+      reward: [
+        { text: "玩一局手机/电脑游戏", cost: 30 },
+        { text: "刷短视频10分钟", cost: 10 },
+        { text: "买个小商品（如文具）", cost: 50 },
+        { text: "看B站游戏实况20分钟", cost: 20 },
+        { text: "赖床看视频15分钟", cost: 20 },
+      ],
+      motivate: [
+        { text: "听激励BGM", cost: 10 }
+      ]
+    };
+
+    function App() {
+      const [points, setPoints] = useState(0);
+      const [lastRoll, setLastRoll] = useState(null);
+      const [selectedPool, setSelectedPool] = useState(null);
+      const [duoCounter, setDuoCounter] = useState(0);
+      const [zhimiCounter, setZhimiCounter] = useState(0);
+
+      const rollDice = () => {
+        const dice = Math.ceil(Math.random() * 6);
+        setPoints(prev => prev + dice);
+        setLastRoll(dice);
+      };
+
+      const addFixedPoint = (num) => {
+        setPoints(prev => prev + num);
+        setLastRoll("保底+" + num);
+      };
+
+      const completeZhimiSession = () => {
+        const next = zhimiCounter + 1;
+        if (next >= 1) {
+          rollDice();
+          setZhimiCounter(0);
+        } else {
+          setZhimiCounter(next);
+        }
+      };
+
+      const completeDuoSession = () => {
+        const next = duoCounter + 1;
+        if (next >= 2) {
+          rollDice();
+          setDuoCounter(0);
+        } else {
+          setDuoCounter(next);
+        }
+      };
+
+      const chooseReward = (reward) => {
+        if (points >= reward.cost) {
+          setPoints(prev => prev - reward.cost);
+          alert("你兑换了：" + reward.text);
+        } else {
+          alert("点数不足！");
+        }
+      };
+
+      return (
+        <div className="max-w-xl mx-auto p-4 space-y-4">
+          <h1 className="text-2xl font-bold text-center">学习奖励掷骰系统</h1>
+
+          <div className="bg-white p-4 shadow rounded space-y-2">
+            <p>当前点数：<strong>{points}</strong></p>
+            {lastRoll !== null && <p>最近一次点数获取：{lastRoll}</p>}
+            <div className="flex flex-col gap-2">
+              <button className="bg-green-600 text-white px-4 py-2 rounded" onClick={completeZhimiSession}>
+                完成知米背单词（5新词+复习）
+              </button>
+              <button className="bg-blue-600 text-white px-4 py-2 rounded" onClick={completeDuoSession}>
+                完成多邻国2课
+              </button>
+              <button className="bg-yellow-500 text-white px-4 py-2 rounded" onClick={() => addFixedPoint(1)}>
+                多邻国答错太多，保底给1点
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-white p-4 shadow rounded space-y-3">
+            <h2 className="text-lg font-semibold">选择奖励池：</h2>
+            <div className="flex gap-2">
+              <button className="px-3 py-1 border rounded" onClick={() => setSelectedPool("relax")}>放松池</button>
+              <button className="px-3 py-1 border rounded" onClick={() => setSelectedPool("reward")}>奖励池</button>
+              <button className="px-3 py-1 border rounded" onClick={() => setSelectedPool("motivate")}>激励池</button>
+            </div>
+            {selectedPool && (
+              <div className="space-y-2">
+                {rewardPools[selectedPool].map((item, index) => (
+                  <button key={index}
+                          className="w-full border rounded px-3 py-2 flex justify-between items-center"
+                          onClick={() => chooseReward(item)}>
+                    {item.text}
+                    <span className="text-gray-500">({item.cost}点)</span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      );
+    }
+
+    ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+  </script>
+</body>
+</html>
